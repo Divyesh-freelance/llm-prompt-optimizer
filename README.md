@@ -16,13 +16,13 @@ Works as a **standalone engine** while optionally integrating with graph provide
 
 | The optimizer MUST | The optimizer MUST NEVER |
 |---|---|
-| Preserve sconditionntic intent | Hallucinate user goals |
-| Rconditionin deterministic | Invent broader tasks |
+| Preserve semantic intent | Hallucinate user goals |
+| Remain deterministic | Invent broader tasks |
 | Discover minimal required context | Rewrite prompts creatively |
 | Explain why dependencies were included | Widen repo scope unnecessarily |
 | Gracefully degrade when tools unavailable | Assume architecture redesign |
 | Optimize at line-level granularity | Depend on hardcoded limits |
-| Rconditionin agent-agnostic | Require external graph tools to function |
+| Remain agent-agnostic | Require external graph tools to function |
 
 **Highest priority rule: Intent preservation > Compression. Always.**
 
@@ -45,7 +45,7 @@ Precise Context Extraction ← line-level, never full files
       ↓
 Prompt Optimization    ← compression + constraint injection (no creative rewriting)
       ↓
-Sconditionntic Validation    ← reject if similarity < 0.90
+Semantic Validation    ← reject if similarity < 0.90
       ↓
 Drift Detection        ← scope widening, hallucinated files, altered intent
       ↓
@@ -63,7 +63,7 @@ AI Agent / LLM
 ```bash
 pip install llm-prompt-optimizer
 
-# With ML-powered sconditionntic similarity (recommended):
+# With ML-powered semantic similarity (recommended):
 pip install "llm-prompt-optimizer[ml]"
 
 # With Anthropic adapter:
@@ -88,7 +88,7 @@ result = optimizer.optimize(
 
 print(result.optimized_prompt.text)
 print(f"Tokens: {result.optimized_prompt.token_estimate}")
-print(f"Similarity: {result.optimized_prompt.sconditionntic_similarity:.3f}")
+print(f"Similarity: {result.optimized_prompt.semantic_similarity:.3f}")
 print(f"Category: {result.classification.primary_category.value}")
 print(f"Intent: {result.intent_lock.intent_summary}")
 print(f"Drift clean: {result.drift_report.is_clean}")
@@ -109,7 +109,7 @@ llm-prompt-optimizer optimize "debug condition mismatch" --json
 # Classify a prompt
 llm-prompt-optimizer classify "implement /health endpoint in api/routes.py"
 
-# Validate sconditionntic similarity
+# Validate semantic similarity
 llm-prompt-optimizer validate \
   --raw "debug condition mismatch" \
   --optimized "# Task\ndebug condition mismatch\n## Constraints\n- No code changes."
@@ -151,7 +151,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "args": ["serve", "--transport", "stdio"],
       "env": {
         "LPO_STRICT_INTENT": "true",
-        "LPO_SconditionNTIC_THRESHOLD": "0.90",
+        "LPO_SEMANTIC_THRESHOLD": "0.90",
         "LPO_LOG_LEVEL": "WARNING"
       }
     }
@@ -185,7 +185,7 @@ Add to `.cursor/mcp.json`:
 | `detect_prompt_drift` | Scope/intent drift detection |
 | `estimate_prompt_cost` | Token cost estimation |
 | `compress_context` | Context compression |
-| `validate_intent` | Sconditionntic similarity validation |
+| `validate_intent` | Semantic similarity validation |
 | `benchmark_prompt` | Run built-in benchmarks |
 
 > Registering the MCP server only makes these tools **available** to the agent — it does not force the agent to call them on every prompt. To make `optimize_prompt` run automatically before each coding turn, see the next section.
@@ -329,7 +329,7 @@ uvicorn llm_prompt_optimizer.api.app:app --host 0.0.0.0 --port 8765
 | `GET`  | `/health` | Health check |
 | `POST` | `/optimize` | Optimize a prompt |
 | `POST` | `/classify` | Classify a prompt |
-| `POST` | `/validate` | Sconditionntic validation |
+| `POST` | `/validate` | Semantic validation |
 | `POST` | `/detect-drift` | Drift detection |
 | `POST` | `/estimate-cost` | Token cost estimation |
 | `POST` | `/resolve-context` | Precise context resolution |
@@ -362,7 +362,7 @@ Copy `.env.example` to `.env` and configure:
 ```bash
 # Policy
 LPO_STRICT_INTENT=true
-LPO_SconditionNTIC_THRESHOLD=0.90
+LPO_SEMANTIC_THRESHOLD=0.90
 LPO_TOKEN_BUDGET=8000
 
 # MCP Server
@@ -385,7 +385,7 @@ from llm_prompt_optimizer.config.settings import PolicyConfig, TokenBudgetConfig
 
 config = OptimizerConfig()
 config.policy.strict_intent_mode = True
-config.policy.sconditionntic_similarity_threshold = 0.90
+config.policy.semantic_similarity_threshold = 0.90
 config.policy.allow_scope_expansion = "controlled"
 config.token_budget.default_budget_tokens = 8000
 config.token_budget.adaptive_budgeting = True
@@ -465,7 +465,7 @@ context_value_score = (relevance × confidence × execution_proximity) / token_c
 - Confidence gain below threshold
 - Token cost exceeds marginal value
 - Execution relevance weakens
-- Sconditionntic confidence decreases
+- Semantic confidence decreases
 - Budget exhausted
 
 ---
@@ -498,7 +498,7 @@ python benchmarks/run_benchmarks.py --case debug_condition_mismatch
 ```
 
 Metrics measured:
-- Sconditionntic similarity preservation
+- Semantic similarity preservation
 - Token reduction %
 - Classification accuracy
 - Context usefulness
@@ -548,7 +548,7 @@ llm-prompt-optimizer/
 │   │   ├── adaptive_context_expansion/ # Value-based expansion
 │   │   ├── precise_context/      # Line-level extraction
 │   │   ├── optimizer/            # PromptOptimizer + PromptCompiler
-│   │   ├── sconditionntic_validator/   # Similarity validation
+│   │   ├── semantic_validator/   # Similarity validation
 │   │   ├── drift_detection/      # Drift detector
 │   │   ├── fallback_graph/       # Standalone AST graph engine
 │   │   ├── token_budget/         # Token budget management
