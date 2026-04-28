@@ -81,7 +81,7 @@ from llm_prompt_optimizer import Optimizer
 optimizer = Optimizer()
 
 result = optimizer.optimize(
-    prompt="Debug condition mismatch in the provided /path/repository/file No code changes.",
+    prompt="Debug condition mismatch in the provided /path/repository/file. No code changes.",
     strict_mode=True,
     repo_root="/path/to/your/repo",
 )
