@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  # ── HTTP API server ──────────────────────────────────────────────────────────
+  optimizer-api:
+    build:
+      context: .
+      target: runtime
+    image: llm-prompt-optimizer:latest
+    container_name: lpo-api
+    ports:
+      - "8765:8765"
+    environment:
+      LPO_MCP_TRANSPORT: http
+      LPO_MCP_HOST: 0.0.0.0
+      LPO_MCP_PORT: "8765"
+      LPO_LOG_LEVEL: INFO
+      LPO_STRICT_INTENT: "true"
+      LPO_SEMANTIC_THRESHOLD: "0.90"
+      LPO_TOKEN_BUDGET: "8000"
+      LPO_GRAPH_PROVIDER: ""
+    volumes:
+      - lpo-audit:/root/.llm_prompt_optimizer
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8765/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── MCP stdio gateway (for Cursor / Claude Desktop) ──────────────────────────
+  optimizer-mcp:
+    build:
+      context: .
+      target: runtime
+    image: llm-prompt-optimizer:latest
+    container_name: lpo-mcp
+    stdin_open: true
+    tty: true
+    environment:
+      LPO_MCP_TRANSPORT: stdio
+      LPO_LOG_LEVEL: WARNING
+    volumes:
+      - lpo-audit:/root/.llm_prompt_optimizer
+      - ./:/workspace:ro  # mount repo for context resolution
+    command: ["python", "-m", "llm_prompt_optimizer.mcp_server.transport.stdio"]
+    profiles:
+      - mcp
+
+  # ── Test runner ───────────────────────────────────────────────────────────────
+  optimizer-test:
+    build:
+      context: .
+      target: dev
+    image: llm-prompt-optimizer:dev
+    container_name: lpo-test
+    volumes:
+      - ./tests:/app/tests
+      - ./benchmarks:/app/benchmarks
+    command: ["pytest", "tests/", "-v", "--tb=short"]
+    profiles:
+      - test
+
+  # ── Optional: Redis cache (for production scale) ──────────────────────────────
+  cache:
+    image: redis:7-alpine
+    container_name: lpo-cache
+    ports:
+      - "6379:6379"
+    profiles:
+      - production
+
+volumes:
+  lpo-audit:
+    driver: local

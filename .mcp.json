@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "llm-prompt-optimizer": {
+      "command": "llm-prompt-optimizer",
+      "args": ["serve", "--transport", "stdio"],
+      "env": {
+        "LPO_STRICT_INTENT": "true",
+        "LPO_SEMANTIC_THRESHOLD": "0.90",
+        "LPO_LOG_LEVEL": "WARNING"
+      }
+    }
+  }
+}
